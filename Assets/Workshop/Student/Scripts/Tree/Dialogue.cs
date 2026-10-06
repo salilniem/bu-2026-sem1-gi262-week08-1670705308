@@ -2,42 +2,48 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public class Dialogue
+{
+    public string text;
+    public Dictionary<string, Dialogue> nexts = new Dictionary<string, Dialogue>();
 
-    public class DialogueNode
+    public Dialogue(string text)
     {
-        public string text;
-        public Dictionary<string, DialogueNode> nexts = new Dictionary<string, DialogueNode>();
+        this.text = text;
+        this.nexts = new Dictionary<string, Dialogue>();
+    }
 
-        public DialogueNode(string text)
+    public void AddNextNode(string choiceText, Dialogue nextNode)
+    {
+        if (!nexts.ContainsKey(choiceText))
         {
-            // 1. set the text of the node and initialize the nexts dictionary
-
-        }
-
-        public void AddNext(DialogueNode next, string choiceText)
-        {
-            // 2. add the next node to the nexts dictionary with the choice text as the key
-
-        }
-
-        public void Print()
-        {
-            Debug.Log("NPC: " + text);
-            var choiceText = new List<string>(nexts.Keys);
-            for (int i = 0; i < choiceText.Count; i++)
-            {
-                Debug.Log("    +-- [" + (i + 1) + "] " + choiceText[i]);
-            }
-            Debug.Log("--------------------");
+            nexts.Add(choiceText, nextNode);
         }
     }
 
-    public class DialogueTree
+    public void AddNext(Dialogue nextNode, string choiceText)
     {
-        public DialogueNode root;
-
-        public DialogueTree(DialogueNode root)
-        {
-            this.root = root;
-        }
+        AddNextNode(choiceText, nextNode);
     }
+
+    public void Print()
+    {
+        Debug.Log("NPC: " + text);
+        var choiceText = new List<string>(nexts.Keys);
+        for (int i = 0; i < choiceText.Count; i++)
+        {
+            Debug.Log("    +-- [" + (i + 1) + "] " + choiceText[i]);
+        }
+        Debug.Log("--------------------");
+    }
+}
+
+public class DialogueTree
+{
+    public Dialogue rootNode;
+
+    public DialogueTree(Dialogue rootNode)
+    {
+        this.rootNode = rootNode;
+    }
+}

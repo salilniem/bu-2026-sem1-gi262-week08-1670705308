@@ -5,75 +5,62 @@ using UnityEngine;
 public class DialogueSequen : MonoBehaviour
 {
     public DialogueTree tree;
-    public DialogueNode currentNode;
-    DialogueUI dialogueUI; 
+    public Dialogue currentNode;
+    public DialogueUI dialogueUI;
 
     public void Start()
     {
-        // ตรวจสอบ UI และตั้งค่า
-        // 1. call LoadConversation() to set up the dialogue tree
-
+        // 1. call LoadConversations() to set up the dialogue tree
+        LoadConversations();
 
         // 2. set the current node to the root of the tree and print its contents
+        if (GetComponent<NPC>() != null)
+        {
+            dialogueUI = GetComponent<NPC>().dialogueUI;
+        }
 
+        currentNode = tree.rootNode;
+
+        if (dialogueUI != null && currentNode != null)
+        {
+            dialogueUI.Setup(this);
+        }
     }
 
     private void LoadConversations()
     {
-        // NPC: Ah, traveler! What brings you to this old place?
-        //     |
-        //     +-- [1] Can you give me a quest?
-        //     |       |
-        //     |       +-- NPC: I have a task for you. There’s a beast in the woods. Can you take care of it?
-        //     |               |
-        //     |               +-- [1] I’m ready for anything!
-        //     |               |       |
-        //     |               |       +-- NPC: You're not ready for this yet. Come back when you're stronger.
-        //     |               |
-        //     |               +-- [2] Maybe later.
-        //     |                       |
-        //     |                       +-- NPC: Safe travels, adventurer.
-        //     |
-        //     +-- [2] Where is the village?
-        //     |       |
-        //     |       +-- NPC: Follow the road south, and you’ll reach the village.
-        //     |
-        //     +-- [3] How do I get to the forest?
-        //     |       |
-        //     |       +-- NPC: Head west, into the forest. But beware, it's dangerous.
-        //     |
-        //     +-- [4] Goodbye.
-        //             |
-        //             +-- NPC: Safe travels, adventurer.
-
         // 3. Create the dialogue nodes
-        DialogueNode greeting = new DialogueNode("Ah, traveler! What brings you to this old place?");
-        DialogueNode askForQuest = new DialogueNode("I have a task for you. There’s a beast in the woods. Can you take care of it?");
-        DialogueNode questDenied = new DialogueNode("You're not ready for this yet. Come back when you're stronger.");
-        DialogueNode directionsVillage = new DialogueNode("Follow the road south, and you’ll reach the village.");
-        DialogueNode directionsForest = new DialogueNode("Head west, into the forest. But beware, it's dangerous.");
-        DialogueNode goodbye = new DialogueNode("Safe travels, adventurer.");
-        DialogueNode noIdea = new DialogueNode("I'm afraid I can't help you with that.");
+        Dialogue greeting = new Dialogue("Ah, traveler! What brings you to this old place?");
+        Dialogue askForQuest = new Dialogue("I have a task for you. There’s a beast in the woods. Can you take care of it?");
+        Dialogue questDenied = new Dialogue("You're not ready for this yet. Come back when you're stronger.");
+        Dialogue directionsVillage = new Dialogue("Follow the road south, and you’ll reach the village.");
+        Dialogue directionsForest = new Dialogue("Head west, into the forest. But beware, it's dangerous.");
+        Dialogue goodbye = new Dialogue("Safe travels, adventurer.");
+        Dialogue noIdea = new Dialogue("I'm afraid I can't help you with that.");
 
-        // Build the tree, adding custom responses
-        // 4. Build the tree, adding custom responses ...
+        // 4. Build the tree, adding custom responses
+        // [1]
+        greeting.AddNextNode("Can you give me a quest?", askForQuest);
 
-        // [1] add greeting's next node: askForQuest, with text: "Can you give me a quest?"
+        // [2]
+        greeting.AddNextNode("Where is the village?", directionsVillage);
 
-        // [2] add greeting's next node: directionsVillage, with text: "Where is the village?" 
+        // [3]
+        greeting.AddNextNode("How do I get to the forest?", directionsForest);
 
-        // [3] add greeting's next node: directionsForest, with text: "How do I get to the forest?" 
+        // [4]
+        greeting.AddNextNode("Goodbye.", goodbye);
 
-        // [4] add greeting's next node: goodbye, with text: "Goodbye."
+        // [5]
+        askForQuest.AddNextNode("I’m ready for anything!", questDenied);
 
-        // [5] add askForQuest's next node: questDenied, with text: "I’m ready for anything!"
-
-        // [6] add askForQuest's next node: goodbye, with text: "Maybe later."
+        // [6]
+        askForQuest.AddNextNode("Maybe later.", goodbye);
 
         // 5. Set up the root of the dialogue tree
+        tree = new DialogueTree(greeting);
     }
 
-    // **เมธอดใหม่สำหรับรับการเลือกจากปุ่ม UI**
     public void SelectChoice(int index)
     {
         var choiceTextKeys = new List<string>(currentNode.nexts.Keys);
@@ -85,19 +72,17 @@ public class DialogueSequen : MonoBehaviour
             // 1. เลื่อนไปยัง Dialogue Node ถัดไป
             currentNode = currentNode.nexts[choiceKey];
 
-            // 2. ตรวจสอบว่ามีตัวเลือกถัดไปหรือไม่ (จบการสนทนา)
+            // 2. ตรวจสอบว่ามีตัวเลือกถัดไปหรือไม่
             if (currentNode.nexts.Count > 0)
             {
-                dialogueUI.ShowDialogue(currentNode); // แสดง Node ถัดไป
+                dialogueUI.ShowDialogue(currentNode);
             }
             else
             {
-                // ถ้าไม่มีตัวเลือกถัดไป ถือว่าจบบทสนทนา
-                dialogueUI.ShowDialogue(currentNode);   // แสดงข้อความสุดท้าย
-                dialogueUI.ShowCloseButtonDialog();    // อาจเพิ่ม Delay และเรียก dialogueUI.HideDialogue() ที่นี่
-                                                      // หรือทำให้ปุ่ม "ปิด" แสดงขึ้นมา
+                // จบบทสนทนา
+                dialogueUI.ShowDialogue(currentNode);
+                dialogueUI.ShowCloseButtonDialog();
             }
         }
     }
 }
-
